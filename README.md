@@ -1,0 +1,2 @@
+# sevenvoid.blog
+sevenvoid.blog
