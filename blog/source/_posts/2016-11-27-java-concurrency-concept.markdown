@@ -1,5 +1,6 @@
 ---
-title: Java并发编程系列（二）：回归线程本质
+title: Java并发编程系列（三）：回归线程本质
+date: 2016/11/27
 categories:
 - 并发编程
 tags:

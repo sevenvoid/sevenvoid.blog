@@ -1,5 +1,6 @@
 ---
 title: 计算机中数的表示及其运算
+date: 2016/11/06
 categories:
 - 计算机原理
 tags: 

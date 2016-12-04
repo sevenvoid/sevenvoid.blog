@@ -1,5 +1,6 @@
 ---
 title: Java并发编程系列（一）：Singleton血案
+date: 2016/11/20
 categories:
 - 并发编程
 tags:
@@ -9,11 +10,11 @@ tags:
 ---
 
 <blockquote class="blockquote-center">很早以前就想认认真真的学习、吃透Java编程方面的各种原理，并且积累一些经验，一是想要技术更上一层楼，二也是想要找到一个自己想要探索的方向。在自己的认知上，一直认为吃透了基础，才可以选择远方。   ——题记</blockquote>
-从本文开始将会详细了解一下Java并发编程方法的相关知识，内容的来源可能是自己看书、或者网上的优秀博文。好记性不如烂笔头，自己暂时写不好一篇文章，那么试着整理也是一件不可多得的事情，至少认真思考了，也实践了一遍。本文将从一个单例模式开始，看下如何编写正确的并发代码。
+从本文开始将会详细了解一下Java并发编程方法的相关知识，内容的来源可能是自己看书、或者网上的优秀博文，文末都会有相关的参考链接，详细内容可以访问原文。好记性不如烂笔头，自己暂时写不好一篇文章，那么试着整理也是一件不可多得的事情，至少认真思考了，也实践了一遍。本文将从一个单例模式开始，看下如何编写正确的并发代码。
 
 Singleton的习惯使用
 ====
-Singleton设计模式可能是被讨论和使用的最广泛的一个设计模式了，在Java编程中，单例模式程序员一般习惯会写成如下形式：
+Singleton设计模式可能是被讨论和使用的最广泛的一个设计模式了，在Java编程中，对于单例模式，程序员一般习惯会写成如下形式：
 ```java
 package edu.sevenvoid.jvm.thread;
 /**
@@ -67,7 +68,7 @@ The current thread is : Thread-2
 The current thread is : Thread-1
 ```
 ## 同步问题
-既然涉及到了并发访问，那我们自然而然就想到了同步，比如用synchronized关键字来同步方法或者代码块：
+既然涉及到了并发访问，那我们自然而然就想到了同步，比如用synchronized关键字来同步方法或者代码块，如下所示：
 ```java
 public class SingletonTest {
 	
@@ -85,7 +86,7 @@ public class SingletonTest {
 		}
 		return instance;
 	}
-	//第二种同步方式
+	//第二种同步方式，当然，这两种方式只能选择一种实现
 	public static SingletonTest getInstance() {
 		synchronized(SingletonTest.class) {
 			if(instance == null) {      //C-2-1:
@@ -141,7 +142,7 @@ memory=allocate(); //1:分配对象的内存空间
 instance=memory; //3:设置instance指向刚分配的内存地址（执行完这步 instance才是非 null了）
 initInstance(memory); //2:初始化对象
 ```
-如果发生重排序，另一个并发执行的线程B就有可能在第4行判断instance不为null。线程B接下来将访问instance所引用的对象，但此时这个对象可能还没有被A线程初始化。在知晓问题发生的根源之后，我们可以想出两个办法解决:
+如果发生重排序，另一个并发执行的线程B就有可能在第4行判断instance不为null。线程B接下来将访问instance所引用的对象，但此时这个对象可能还没有被A线程初始化，在使用时就会出现问题。在知晓问题发生的根源之后，我们可以想出两个办法解决:
 1. 不允许2和3重排序
 2. 允许2和3重排序，但不允许其他线程“看到”这个重排序
 
@@ -241,14 +242,14 @@ Hello thread : Thread-5
 默认枚举实例的创建是线程安全的，所以不需要担心线程安全的问题。但是在枚举中的其他任何方法的线程安全由程序员自己负责。还有防止上面的通过反射机制调用私用构造器。这种单元素的枚举类型已经成为实现Singleton的最佳方法。<br />
 
 ## Singleton其他问题
-怎么？还有问题？！当然还有，请记住下面这条规则——“无论你的代码写得有多好，其只能在特定的范围内工作，超出这个范围就要出Bug了”，想一想还有什么情况会让这个我们上面的代码出问题吗？（当然，有些反例可能属于钻牛角尖，可能有点学院派，不过也不排除其实际可能性，就算是提个醒吧）：
+怎么？还有问题？！当然还有，请记住下面这条规则——“无论你的代码写得有多好，其只能在特定的范围内工作，超出这个范围就要出Bug了（左耳朵耗子）”，想一想还有什么情况会让这个我们上面的代码出问题吗？（当然，有些反例可能属于钻牛角尖，不过也不排除其实际可能性。
 
 ### Class Loader
-不知道你对Java的Class Loader熟悉吗？“类装载器”？这是Java动态性的核心。顾名思义，类装载器是用来把类(class)装载进JVM的。JVM规范定义了两种类型的类装载器：启动内装载器(bootstrap)和用户自定义装载器(user-defined class loader)。 在一个JVM中可能存在多个ClassLoader，每个ClassLoader拥有自己的NameSpace。一个ClassLoader只能拥有一个class对象类型的实例，但是不同的ClassLoader可能拥有相同的class对象实例，这时可能产生致命的问题。如ClassLoaderA，装载了类A的类型实例A1，而ClassLoaderB，也装载了类A的对象实例A2。逻辑上讲A1=A2，但是由于A1和A2来自于不同的ClassLoader，它们实际上是完全不同的，如果A中定义了一个静态变量c，则c在不同的ClassLoader中的值是不同的。<br/>
-于是，如果Singleton的双重检查版本如果面对着多个Class Loader会怎么样？多个实例同样会被多个Class Loader创建出来，当然，这个有点牵强，不过他确实存在。我们不能在Singleton类中操作Class Loader，在这种情况下，能做的只有是——“保证多个Class Loader不会装载同一个Singleton”。
+JVM规范定义了两种类型的类装载器：启动内装载器(bootstrap)和用户自定义装载器(user-defined class loader)。 在一个JVM中可能存在多个ClassLoader，每个ClassLoader拥有自己的NameSpace。一个ClassLoader只能拥有一个class对象类型的实例，但是不同的ClassLoader可能拥有相同的class对象实例，这时可能产生致命的问题。如ClassLoaderA，装载了类A的类型实例A1，而ClassLoaderB，也装载了类A的对象实例A2。逻辑上讲A1=A2，但是由于A1和A2来自于不同的ClassLoader，它们实际上是完全不同的，如果A中定义了一个静态变量c，则c在不同的ClassLoader中的值是不同的。<br/>
+于是，如果Singleton的双重检查版本如果面对着多个Class Loader就会有多个实例同样会被多个Class Loader创建出来，当然，这个有点牵强，不过他确实存在。我们不能在Singleton类中操作Class Loader，在这种情况下，能做的只有是——“保证多个Class Loader不会装载同一个Singleton”。
 
 ### 序例化
-如果我们的这个Singleton类是一个关于我们程序配置信息的类。我们需要它有序列化的功能，那么，当反序列化的时候，我们将无法控制别人不多次反序列化。不过，我们可以利用一下Serializable接口的readResolve()方法，比如：
+如果我们的这个Singleton类具有序列化的功能，那么当反序列化的时候，我们将无法控制别人不多次反序列化，这样就会造成多个对象被实例化出来。这种情况下，我们可以利用一下Serializable接口的readResolve()方法，比如：
 ```java
 public class Singleton implements Serializable
 {
@@ -256,7 +257,7 @@ public class Singleton implements Serializable
     ......
     protected Object readResolve()
     {
-        return getInstance();
+        return getInstance(); //或者枚举情况下： return INSTANCE;
     }
 }
 ```

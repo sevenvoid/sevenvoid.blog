@@ -1,5 +1,6 @@
 ---
-title: Java并发编程系列（一）：深入理解synchronized
+title: Java并发编程系列（二）：深入理解synchronized
+date: 2016/11/22
 categories:
 - 并发编程
 tags:
@@ -7,6 +8,7 @@ tags:
 - 并发编程
 - synchronized
 ---
+由单例模式的延伸，再来看一下synchronize的奥秘
 
 synchronized 使用
 ===
