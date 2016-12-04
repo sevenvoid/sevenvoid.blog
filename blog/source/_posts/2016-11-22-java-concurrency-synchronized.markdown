@@ -7,7 +7,6 @@ tags:
 - 并发编程
 - synchronized
 ---
-<blockquote class="blockquote-center">很早以前就想认认真真的学习，吃透Java编程方面的各种原理，并且积累一些经验，一是想要技术更上一层楼，二也是想要找到一个自己想要探索的方向。在自己的认知上，一直认为吃透了基础，才可以选择远方。   ——题记</blockquote>
 
 synchronized 使用
 ===
